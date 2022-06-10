@@ -1,16 +1,16 @@
-const Role = require("./models/Role.js");
-const User = require("./models/User.js");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { validationResult } = require("express-validator");
-const { secret } = require("./config.js");
+const Role = require('./models/Role.js');
+const User = require('./models/User.js');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { validationResult } = require('express-validator');
+const { secret } = require('./config.js');
 
 const generateAccessToken = (id, roles) => {
     const payLoad = {
         id,
         roles,
     };
-    return jwt.sign(payLoad, secret, { expiresIn: "24h" });
+    return jwt.sign(payLoad, secret, { expiresIn: '24h' });
 };
 
 class authController {
@@ -20,30 +20,30 @@ class authController {
             if (!errors.isEmpty()) {
                 return res
                     .status(400)
-                    .json({ message: "Error on registration" });
+                    .json({ message: 'Error on registration' });
             }
             const { username, password } = req.body; //получаем имя и пароль из тела запроса
             const candidate = await User.findOne({ username });
             if (candidate) {
                 return res.status(400).json({
-                    message: "A user with the same name already exists",
+                    message: 'A user with the same name already exists',
                 });
             }
-            const hashPassword = bcrypt.hashSync(password, 7);
-            const userRole = await Role.findOne({ value: "USER" });
+            const hashPassword = bcrypt.hashSync(password, 7); //хэширование пароля
+            const userRole = await Role.findOne({ value: 'USER' });
             const user = new User({
                 username,
                 password: hashPassword,
                 roles: [userRole.value],
             });
-            await user.save();
+            await user.save(); //сохранение пользователя в БД
             return res.json({
-                message: "User successfully registered",
+                message: 'User successfully registered',
             });
         } catch (error) {
             console.log(error);
             res.status(400).json({
-                message: "Registration error",
+                message: 'Registration error',
                 e: error.message,
             });
         }
@@ -52,25 +52,27 @@ class authController {
     async login(req, res) {
         try {
             const { username, password } = req.body;
-            const user = await User.findOne({ username });
+            const user = await User.findOne({ username }); //пытаемся получить пользователя из БД
             if (!user) {
                 return res
                     .status(400)
                     .json({ message: `${user} with this name not found` });
             }
+            //сравнение пароля, которое ввел пользователь и тем, который расположен в БД
             const validPassword = await bcrypt.compareSync(
                 password,
-                user.password,
+                user.password
             );
             if (!validPassword) {
                 return res
                     .status(400)
-                    .json({ message: "Wrong password entered" });
+                    .json({ message: 'Wrong password entered' });
             }
+            //генерация токена, который затем будет отправлен пользователю
             const token = generateAccessToken(user._id, user.roles);
             return res.json({ token });
         } catch (error) {
-            res.status(400).json({ message: "Login error", e: error.message });
+            res.status(400).json({ message: 'Login error', e: error.message });
         }
     }
 
