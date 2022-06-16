@@ -70,7 +70,7 @@ class authController {
             }
             //генерация токена, который затем будет отправлен пользователю
             const token = generateAccessToken(user._id, user.roles);
-            return res.json({ token });
+            return res.json({ username, token });
         } catch (error) {
             res.status(400).json({ message: 'Login error', e: error.message });
         }
