@@ -13,6 +13,7 @@ app.use(
     cors({
         credentials: true,
         origin: 'http://localhost:3000',
+        //origin: process.env.CLIENT_URL,
     })
 );
 app.use('/auth', authRouter);
